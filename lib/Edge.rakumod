@@ -1,6 +1,8 @@
 unit module Edge;
+use Grammar::PrettyErrors;
 
 my %var;
+my $line = 0;
 
 class EdgeActions is export {
     method let_expr($/) {
@@ -50,14 +52,16 @@ class EdgeActions is export {
     }
 }
 
-grammar EdgeGram is export {
+grammar EdgeGram is export does Grammar::PrettyErrors["ws"] {
     rule TOP {
         \s* [ <stmt> \s* [ ';' \s* ]? ]*
     }
-    
+	
+	token ws { \s* }
+
     token var_name { \w+ }
     token number { \d+ }
-    
+
     rule value { <expr> }
     
     rule expr {
