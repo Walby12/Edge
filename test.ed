@@ -1,0 +1,6 @@
+let x;
+let y;
+x = 12;
+y = 130;
+print(x);
+print(y);
