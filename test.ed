@@ -1,0 +1,4 @@
+let x = 3;
+let y = 12 / (x + 1);
+print(x);
+print(y);
