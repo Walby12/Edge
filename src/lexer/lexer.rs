@@ -103,10 +103,7 @@ impl Lexer {
                     self.index = current_pos;
                 }
                 _ => {
-                    eprintln!(
-                        "Lexer Error: Unknown character '{}' at line {}",
-                        char, self.line
-                    );
+                    eprintln!("ERROR: Unknown character '{}' at line {}", char, self.line);
                     process::exit(1);
                 }
             }

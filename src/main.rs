@@ -1,3 +1,4 @@
+mod codegen;
 mod lexer;
 mod parser;
 mod symbol_table;
@@ -6,7 +7,7 @@ use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 
 fn main() {
-    let mut lexer = Lexer::new(String::from("let x = 12"));
+    let mut lexer = Lexer::new(String::from("let x = 12;"));
     lexer.lexe();
 
     let mut parser = Parser::new(lexer.toks);
