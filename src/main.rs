@@ -1,11 +1,12 @@
 mod lexer;
 mod tokens;
+use crate::lexer::lexer::Lexer;
 
 fn main() {
-    let mut v: Vec<tokens::Tokens> = Vec::new();
-    lexer::lexer::lexe("let x_12 = 12;", &mut v, &mut 0, &mut 1);
+    let mut lexer = Lexer::new(String::from("let x = 12;"));
+    lexer.lexe();
 
-    for t in v {
+    for t in lexer.toks {
         println!("TOKEN: {:?}", t);
     }
 }
