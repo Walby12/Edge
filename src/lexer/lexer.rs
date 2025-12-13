@@ -55,6 +55,14 @@ impl Lexer {
                     self.toks.push(Tokens::EQUALS);
                     self.index += char.len_utf8();
                 }
+                '+' => {
+                    self.toks.push(Tokens::PLUS);
+                    self.index += char.len_utf8();
+                }
+                '-' => {
+                    self.toks.push(Tokens::MINUS);
+                    self.index += char.len_utf8();
+                }
                 _ if char.is_alphabetic() => {
                     let mut current_pos = self.index;
                     let mut id_iter = self.src[current_pos..].chars();

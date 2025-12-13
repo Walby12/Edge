@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Tokens {
     LET,
     EQUALS,
@@ -6,5 +6,7 @@ pub enum Tokens {
     NUMBER(i32),
     SEMICOLON,
     NEWLINE,
+    PLUS,
+    MINUS,
     EOF,
 }
