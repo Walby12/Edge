@@ -22,6 +22,8 @@ fn tok_to_string(a: &Tokens) -> String {
         Tokens::DOUBLECOL => "::".to_string(),
         Tokens::OPENCURLY => "{".to_string(),
         Tokens::CLOSECURLY => "}".to_string(),
+        Tokens::CLOSEPAREN => ")".to_string(),
+        Tokens::OPENPAREN => "(".to_string(),
     }
 }
 
@@ -112,7 +114,16 @@ impl Parser {
 
         let func_ret_name = self.consume_ident_value();
         let func_ret_type = match func_ret_name.as_str() {
-            "void" => FunctionType::VOID,
+            "void" => {
+                if func_name == "main".to_string() {
+                    eprintln!(
+                        "ERROR on line {}: The return type of main must be int",
+                        self.lexer.line
+                    );
+                    process::exit(1);
+                }
+                FunctionType::VOID
+            }
             _ => {
                 eprintln!(
                     "ERROR on line {}: Unknow function return type: {}",
@@ -153,13 +164,16 @@ impl Parser {
                 }
 
                 Tokens::IDENT(name) => {
-                    let var_name = name.clone();
+                    let action_name = name.clone();
 
                     self.advance();
 
                     match self.current() {
                         Tokens::EQUALS => {
-                            self.parse_var_reassign(var_name);
+                            self.parse_var_reassign(action_name);
+                        }
+                        Tokens::OPENPAREN => {
+                            self.parse_func_call(action_name);
                         }
                         _ => {
                             eprintln!(
@@ -183,6 +197,35 @@ impl Parser {
                 }
             }
         }
+    }
+
+    fn parse_func_call(&mut self, name: String) {
+        if name == "putchar".to_string() {
+            self.expect(&Tokens::OPENPAREN);
+            match self.current() {
+                Tokens::NUMBER(n) => {
+                    let value = n.clone();
+                    self.advance();
+                    self.expect(&Tokens::CLOSEPAREN);
+                    self.codegen.function_call(name, value.to_string());
+                }
+                _ => {
+                    eprintln!(
+                        "ERROR at line {}: Expected a number value for function putchar got: {}",
+                        self.lexer.line,
+                        tok_to_string(self.current())
+                    );
+                    process::exit(1);
+                }
+            }
+        } else {
+            eprintln!(
+                "ERROR at line {}: Unknow function: {}",
+                self.lexer.line, name
+            );
+            process::exit(1);
+        }
+        self.expect(&Tokens::SEMICOLON);
     }
 
     fn parse_var_reassign(&mut self, name: String) {

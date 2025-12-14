@@ -41,11 +41,16 @@ impl Codegen {
             FunctionType::VOID => "void",
         };
 
-        let str = format!("{} {} {{\n", r#type, func_name);
+        let str = format!("{} {}() {{\n", r#type, func_name);
         self.builder.push_str(&str)
     }
 
     pub fn end_function(&mut self) {
         self.builder.push_str("}\n");
+    }
+
+    pub fn function_call(&mut self, func_name: String, func_val: String) {
+        let str = format!("\t{}({});\n", func_name, func_val);
+        self.builder.push_str(&str);
     }
 }

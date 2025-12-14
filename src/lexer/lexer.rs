@@ -75,6 +75,14 @@ impl Lexer {
                 self.index += char_len;
                 Tokens::CLOSECURLY
             }
+            '(' => {
+                self.index += char_len;
+                Tokens::OPENPAREN
+            }
+            ')' => {
+                self.index += char_len;
+                Tokens::CLOSEPAREN
+            }
             _ if char.is_alphabetic() => {
                 let mut current_pos = self.index;
                 let mut id_iter = self.src[current_pos..].chars();

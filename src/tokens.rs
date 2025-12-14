@@ -10,5 +10,7 @@ pub enum Tokens {
     DOUBLECOL,
     OPENCURLY,
     CLOSECURLY,
+    OPENPAREN,
+    CLOSEPAREN,
     EOF,
 }
