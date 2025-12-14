@@ -5,37 +5,43 @@ pub enum VariableType {
     INT32(i32),
 }
 
+#[derive(Clone, Debug)]
+pub enum FunctionType {
+    VOID,
+}
+
 pub struct SymbolTable {
     vars: HashMap<String, VariableType>,
+    functions: HashMap<String, FunctionType>,
 }
 
 impl SymbolTable {
     pub fn new() -> Self {
         SymbolTable {
             vars: HashMap::new(),
+            functions: HashMap::new(),
         }
     }
 
-    pub fn get(&self, name: &str) -> Result<VariableType, String> {
+    pub fn get_var(&self, name: &str) -> Result<VariableType, String> {
         self.vars
             .get(name)
             .cloned()
-            .ok_or_else(|| format!("Variable '{}' not declared.", name))
+            .ok_or_else(|| format!("Variable '{}' not in scope", name))
     }
 
-    pub fn set(&mut self, name: String, value: VariableType) {
+    pub fn set_var(&mut self, name: String, value: VariableType) {
         self.vars.insert(name, value);
     }
 
-    pub fn print_state(&self) {
-        println!("\n--- Current Symbol Table State ---");
-        if self.vars.is_empty() {
-            println!("(Empty)");
-        } else {
-            for (name, value) in &self.vars {
-                println!("{}: {:?}", name, value);
-            }
-        }
-        println!("----------------------------------");
+    pub fn get_func(&self, name: &str) -> Result<FunctionType, String> {
+        self.functions
+            .get(name)
+            .cloned()
+            .ok_or_else(|| format!("Function '{}' is not defined", name))
+    }
+
+    pub fn set_func(&mut self, name: String, value: FunctionType) {
+        self.functions.insert(name, value);
     }
 }

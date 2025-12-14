@@ -5,8 +5,10 @@ pub enum Tokens {
     IDENT(String),
     NUMBER(i32),
     SEMICOLON,
-    NEWLINE,
     PLUS,
     MINUS,
+    DOUBLECOL,
+    OPENCURLY,
+    CLOSECURLY,
     EOF,
 }
