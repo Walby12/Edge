@@ -17,7 +17,7 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(source_code: String) -> Self {
+    pub fn new(source_code: String, out_file_name: String) -> Self {
         let mut lexer = Lexer::new(source_code);
 
         let initial_token = lexer.next_token();
@@ -25,7 +25,7 @@ impl Parser {
         Self {
             lexer,
             symbol_table: SymbolTable::new(),
-            codegen: Codegen::new("output.c".to_string()),
+            codegen: Codegen::new(out_file_name),
             current_token: initial_token,
         }
     }
