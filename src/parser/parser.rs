@@ -9,6 +9,22 @@ fn is_same_variant(a: &Tokens, b: &Tokens) -> bool {
     mem::discriminant(a) == mem::discriminant(b)
 }
 
+fn tok_to_string(a: &Tokens) -> String {
+    match a {
+        Tokens::NUMBER(n) => format!("Number {}", n),
+        Tokens::IDENT(n) => format!("Ident {}", n),
+        Tokens::SEMICOLON => ";".to_string(),
+        Tokens::EQUALS => "=".to_string(),
+        Tokens::LET => "let".to_string(),
+        Tokens::EOF => "end of file".to_string(),
+        Tokens::PLUS => "+".to_string(),
+        Tokens::MINUS => "-".to_string(),
+        Tokens::DOUBLECOL => "::".to_string(),
+        Tokens::OPENCURLY => "{".to_string(),
+        Tokens::CLOSECURLY => "}".to_string(),
+    }
+}
+
 pub struct Parser {
     lexer: Lexer,
     symbol_table: SymbolTable,
@@ -51,8 +67,10 @@ impl Parser {
 
         if !matches {
             eprintln!(
-                "ERROR on line {}: Expected {:?} but got: {:?}",
-                self.lexer.line, expected_tok, current_tok
+                "ERROR on line {}: Expected {} but got: {}",
+                self.lexer.line,
+                tok_to_string(expected_tok),
+                tok_to_string(current_tok)
             );
             process::exit(1);
         }
@@ -77,9 +95,9 @@ impl Parser {
                 Tokens::IDENT(_) => self.parse_fn_decl(),
                 _ => {
                     eprintln!(
-                        "ERROR on line {}: Unexpected token in global scope: {:?}",
+                        "ERROR on line {}: Unexpected token in global scope: {}",
                         self.lexer.line,
-                        self.current()
+                        tok_to_string(self.current())
                     );
                     process::exit(1);
                 }
@@ -114,13 +132,14 @@ impl Parser {
 
     fn parse_stmt(&mut self) {
         loop {
-            let current = self.current();
-            if current == &Tokens::CLOSECURLY {
+            let token_type = mem::discriminant(self.current());
+
+            if token_type == mem::discriminant(&Tokens::CLOSECURLY) {
                 self.codegen.end_function();
                 break;
             }
 
-            if current == &Tokens::EOF {
+            if token_type == mem::discriminant(&Tokens::EOF) {
                 eprintln!(
                     "ERROR on line {}: Expected '}}' but reached end of file.",
                     self.lexer.line
@@ -128,14 +147,35 @@ impl Parser {
                 process::exit(1);
             }
 
-            match current {
+            match self.current() {
                 Tokens::LET => {
                     self.parse_let_stmt();
                 }
+
+                Tokens::IDENT(name) => {
+                    let var_name = name.clone();
+
+                    self.advance();
+
+                    match self.current() {
+                        Tokens::EQUALS => {
+                            self.parse_var_reassign(var_name);
+                        }
+                        _ => {
+                            eprintln!(
+                                "ERROR on line {}: Expected '=' or '(' but got: {}",
+                                self.lexer.line,
+                                tok_to_string(self.current())
+                            );
+                            process::exit(1);
+                        }
+                    }
+                }
                 _ => {
                     eprintln!(
-                        "ERROR on line {}: Unexpected token in function scope: {:?}",
-                        self.lexer.line, current
+                        "ERROR on line {}: Unexpected token in function scope: {}",
+                        self.lexer.line,
+                        tok_to_string(self.current())
                     );
 
                     self.advance();
@@ -143,6 +183,36 @@ impl Parser {
                 }
             }
         }
+    }
+
+    fn parse_var_reassign(&mut self, name: String) {
+        self.expect(&Tokens::EQUALS);
+        let var = self.symbol_table.get_var(&name);
+
+        match var {
+            Ok(declared_type) => match declared_type {
+                VariableType::INT32(_) => match self.current() {
+                    Tokens::NUMBER(v) => {
+                        let var_type = VariableType::INT32(*v);
+                        self.codegen.var_reassign(&name, &var_type);
+                        self.advance();
+                    }
+                    _ => {
+                        eprintln!(
+                            "ERROR on line {}: Expected a number but got: {}",
+                            self.lexer.line,
+                            tok_to_string(self.current())
+                        );
+                        process::exit(1);
+                    }
+                },
+            },
+            Err(e) => {
+                eprintln!("ERROR on line {}: {}", self.lexer.line, e);
+                process::exit(1);
+            }
+        }
+        self.expect(&Tokens::SEMICOLON);
     }
 
     fn parse_let_stmt(&mut self) {
@@ -158,9 +228,9 @@ impl Parser {
             }
             _ => {
                 eprintln!(
-                    "ERROR on line {}: Expected a number or expression but got: {:?}",
+                    "ERROR on line {}: Expected a number or expression but got: {}",
                     self.lexer.line,
-                    self.current()
+                    tok_to_string(self.current())
                 );
                 process::exit(1);
             }

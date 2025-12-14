@@ -27,6 +27,15 @@ impl Codegen {
         self.builder.push_str(&str);
     }
 
+    pub fn var_reassign(&mut self, var_name: &str, var_type: &VariableType) {
+        let (_, value) = match var_type {
+            VariableType::INT32(n) => ("", n),
+        };
+
+        let str = format!("\t{} = {};\n", var_name, value);
+        self.builder.push_str(&str);
+    }
+
     pub fn start_function(&mut self, func_name: &str, func_type: &FunctionType) {
         let r#type = match func_type {
             FunctionType::VOID => "void",
