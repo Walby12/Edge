@@ -39,6 +39,7 @@ impl Codegen {
     pub fn start_function(&mut self, func_name: &str, func_type: &FunctionType) {
         let r#type = match func_type {
             FunctionType::VOID => "void",
+            FunctionType::INT => "int",
         };
 
         let str = format!("{} {}() {{\n", r#type, func_name);

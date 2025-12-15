@@ -8,6 +8,7 @@ pub enum VariableType {
 #[derive(Clone, Debug)]
 pub enum FunctionType {
     VOID,
+    INT,
 }
 
 pub struct SymbolTable {

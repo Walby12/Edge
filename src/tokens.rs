@@ -12,5 +12,8 @@ pub enum Tokens {
     CLOSECURLY,
     OPENPAREN,
     CLOSEPAREN,
+    VOID,
+    INT,
+    RETURN,
     EOF,
 }

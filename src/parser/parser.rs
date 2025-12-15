@@ -24,6 +24,8 @@ fn tok_to_string(a: &Tokens) -> String {
         Tokens::CLOSECURLY => "}".to_string(),
         Tokens::CLOSEPAREN => ")".to_string(),
         Tokens::OPENPAREN => "(".to_string(),
+        Tokens::VOID => "void type".to_string(),
+        Tokens::INT => "int type".to_string(),
     }
 }
 
@@ -112,26 +114,29 @@ impl Parser {
         let func_name = self.consume_ident_value();
         self.expect(&Tokens::DOUBLECOL);
 
-        let func_ret_name = self.consume_ident_value();
-        let func_ret_type = match func_ret_name.as_str() {
-            "void" => {
-                if func_name == "main".to_string() {
+        let current = self.current();
+        let func_ret_type = match current {
+            Tokens::VOID => {
+                if func_name == "main" {
                     eprintln!(
-                        "ERROR on line {}: The return type of main must be int",
+                        "ERROR on line {}: Return type of main must be int got void",
                         self.lexer.line
                     );
                     process::exit(1);
                 }
                 FunctionType::VOID
             }
+            Tokens::INT => FunctionType::INT,
             _ => {
                 eprintln!(
-                    "ERROR on line {}: Unknow function return type: {}",
-                    self.lexer.line, func_ret_name
+                    "ERROR on line {}: Unknow return type: {}, expected 'void', 'int'",
+                    self.lexer.line,
+                    tok_to_string(current)
                 );
                 process::exit(1);
             }
         };
+        self.advance();
 
         self.expect(&Tokens::OPENCURLY);
 

@@ -101,6 +101,8 @@ impl Lexer {
 
                 match identifier.as_str() {
                     "let" => Tokens::LET,
+                    "void" => Tokens::VOID,
+                    "int" => Tokens::INT,
                     _ => Tokens::IDENT(identifier),
                 }
             }
