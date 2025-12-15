@@ -11,8 +11,8 @@ fn is_same_variant(a: &Tokens, b: &Tokens) -> bool {
 
 fn tok_to_string(a: &Tokens) -> String {
     match a {
-        Tokens::NUMBER(n) => format!("Number {}", n),
-        Tokens::IDENT(n) => format!("Ident {}", n),
+        Tokens::NUMBER(n) => format!("{}", n),
+        Tokens::IDENT(n) => format!("ident {}", n),
         Tokens::SEMICOLON => ";".to_string(),
         Tokens::EQUALS => "=".to_string(),
         Tokens::LET => "let".to_string(),
@@ -26,6 +26,7 @@ fn tok_to_string(a: &Tokens) -> String {
         Tokens::OPENPAREN => "(".to_string(),
         Tokens::VOID => "void type".to_string(),
         Tokens::INT => "int type".to_string(),
+        Tokens::RETURN => "return ".to_string(),
     }
 }
 
@@ -34,6 +35,7 @@ pub struct Parser {
     symbol_table: SymbolTable,
     codegen: Codegen,
     current_token: Tokens,
+    has_return: bool,
 }
 
 impl Parser {
@@ -47,6 +49,7 @@ impl Parser {
             symbol_table: SymbolTable::new(),
             codegen: Codegen::new(out_file_name),
             current_token: initial_token,
+            has_return: false,
         }
     }
 
@@ -141,12 +144,19 @@ impl Parser {
         self.expect(&Tokens::OPENCURLY);
 
         self.codegen.start_function(&func_name, &func_ret_type);
-        self.symbol_table.set_func(func_name, func_ret_type);
-        self.parse_stmt();
-        self.expect(&Tokens::CLOSECURLY);
+        self.symbol_table.set_func(func_name, func_ret_type.clone());
+        self.parse_stmt(func_ret_type.clone());
+        if !self.has_return {
+            eprintln!(
+                "ERROR on line {}: Expected return a the end of a function",
+                self.lexer.line
+            );
+            process::exit(1);
+        }
+        self.advance();
     }
 
-    fn parse_stmt(&mut self) {
+    fn parse_stmt(&mut self, func_ret_type: FunctionType) {
         loop {
             let token_type = mem::discriminant(self.current());
 
@@ -185,6 +195,42 @@ impl Parser {
                                 "ERROR on line {}: Expected '=' or '(' but got: {}",
                                 self.lexer.line,
                                 tok_to_string(self.current())
+                            );
+                            process::exit(1);
+                        }
+                    }
+                }
+                Tokens::RETURN => {
+                    match func_ret_type {
+                        FunctionType::INT => {
+                            self.advance();
+                            let curr = self.current();
+                            match curr {
+                                Tokens::NUMBER(n) => {
+                                    self.codegen.return_stmt(n.to_string());
+                                }
+                                _ => {
+                                    eprintln!("ERROR on line {}: Expected a number or an ident at the end of a int returning function but got: {}", self.lexer.line, tok_to_string(curr));
+                                    process::exit(1);
+                                }
+                            }
+                        }
+                        FunctionType::VOID => self.codegen.return_stmt("".to_string()),
+                    }
+                    self.advance();
+                    self.expect(&Tokens::SEMICOLON);
+
+                    let curr = self.current();
+                    match curr {
+                        Tokens::CLOSECURLY => {
+                            self.has_return = true;
+                            self.codegen.end_function();
+                            break;
+                        }
+                        _ => {
+                            eprintln!(
+                                "ERROR at line {}: Useless stmts after return stmt",
+                                self.lexer.line
                             );
                             process::exit(1);
                         }

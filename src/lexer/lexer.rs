@@ -103,6 +103,7 @@ impl Lexer {
                     "let" => Tokens::LET,
                     "void" => Tokens::VOID,
                     "int" => Tokens::INT,
+                    "return" => Tokens::RETURN,
                     _ => Tokens::IDENT(identifier),
                 }
             }

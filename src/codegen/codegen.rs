@@ -54,4 +54,9 @@ impl Codegen {
         let str = format!("\t{}({});\n", func_name, func_val);
         self.builder.push_str(&str);
     }
+
+    pub fn return_stmt(&mut self, value: String) {
+        let str = format!("\treturn {};\n", value);
+        self.builder.push_str(&str);
+    }
 }
