@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum VariableType {
-    INT32(i32),
+    INT32(String),
 }
 
 #[derive(Clone, Debug)]

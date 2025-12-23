@@ -209,6 +209,24 @@ impl Parser {
                                 Tokens::NUMBER(n) => {
                                     self.codegen.return_stmt(n.to_string());
                                 }
+                                Tokens::IDENT(n) => match self.symbol_table.get_var(n) {
+                                    Ok(t) => {
+                                        if mem::discriminant(&t)
+                                            != mem::discriminant(&VariableType::INT32(
+                                                0.to_string(),
+                                            ))
+                                        {
+                                            eprintln!("ERROR on line {}: Cannot return a non int var from a int function", self.lexer.line);
+                                            process::exit(1);
+                                        } else {
+                                            self.codegen.return_stmt(n.to_string());
+                                        }
+                                    }
+                                    Err(e) => {
+                                        eprintln!("ERROR on line {}: {}", self.lexer.line, e);
+                                        process::exit(1);
+                                    }
+                                },
                                 _ => {
                                     eprintln!("ERROR on line {}: Expected a number or an ident at the end of a int returning function but got: {}", self.lexer.line, tok_to_string(curr));
                                     process::exit(1);
@@ -287,13 +305,13 @@ impl Parser {
             Ok(declared_type) => match declared_type {
                 VariableType::INT32(_) => match self.current() {
                     Tokens::NUMBER(v) => {
-                        let var_type = VariableType::INT32(*v);
+                        let var_type = VariableType::INT32((*v).to_string());
                         self.codegen.var_reassign(&name, &var_type);
                         self.advance();
                     }
                     _ => {
                         eprintln!(
-                            "ERROR on line {}: Expected a number but got: {}",
+                            "ERROR on line {}: Expected a number or an ident but got: {}",
                             self.lexer.line,
                             tok_to_string(self.current())
                         );
@@ -317,9 +335,21 @@ impl Parser {
         let var_type: VariableType;
         match self.current() {
             Tokens::NUMBER(n) => {
-                var_type = VariableType::INT32(*n);
+                var_type = VariableType::INT32((*n).to_string());
                 self.advance();
             }
+            Tokens::IDENT(n) => match self.symbol_table.get_var(n) {
+                Ok(t) => {
+                    var_type = match t {
+                        VariableType::INT32(_) => VariableType::INT32(n.to_string()),
+                    };
+                    self.advance();
+                }
+                Err(e) => {
+                    eprintln!("ERROR on line {}: {}", self.lexer.line, e);
+                    process::exit(1);
+                }
+            },
             _ => {
                 eprintln!(
                     "ERROR on line {}: Expected a number or expression but got: {}",
