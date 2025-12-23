@@ -4,6 +4,7 @@ pub enum Tokens {
     EQUALS,
     IDENT(String),
     NUMBER(i32),
+    STRING(String),
     SEMICOLON,
     PLUS,
     MINUS,

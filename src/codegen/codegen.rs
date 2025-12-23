@@ -59,4 +59,9 @@ impl Codegen {
         let str = format!("\treturn {};\n", value);
         self.builder.push_str(&str);
     }
+
+    pub fn c_comp_append(&mut self, value: String) {
+        self.builder.push_str(&value);
+        self.builder.push_str("\n");
+    }
 }

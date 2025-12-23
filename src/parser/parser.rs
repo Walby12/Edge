@@ -13,6 +13,7 @@ fn tok_to_string(a: &Tokens) -> String {
     match a {
         Tokens::NUMBER(n) => format!("{}", n),
         Tokens::IDENT(n) => format!("ident {}", n),
+        Tokens::STRING(n) => format!("string {}", n),
         Tokens::SEMICOLON => ";".to_string(),
         Tokens::EQUALS => "=".to_string(),
         Tokens::LET => "let".to_string(),
@@ -99,7 +100,13 @@ impl Parser {
     pub fn parse(&mut self) {
         while *self.current() != Tokens::EOF {
             match self.current() {
-                Tokens::IDENT(_) => self.parse_fn_decl(),
+                Tokens::IDENT(n) => {
+                    if n == "c_comp_append" {
+                        self.parse_c_com_append();
+                    } else {
+                        self.parse_fn_decl();
+                    }
+                }
                 _ => {
                     eprintln!(
                         "ERROR on line {}: Unexpected token in global scope: {}",
@@ -111,6 +118,28 @@ impl Parser {
             }
         }
         self.codegen.end();
+    }
+
+    fn parse_c_com_append(&mut self) {
+        self.advance();
+        self.expect(&Tokens::OPENPAREN);
+
+        let current = self.current();
+        match current {
+            Tokens::STRING(n) => self.codegen.c_comp_append(n.to_string()),
+            Tokens::IDENT(_n) => todo!(),
+            _ => {
+                eprintln!(
+                    "ERROR on line {}: Expected a string or an ident for c_comp_append but got: {}",
+                    self.lexer.line,
+                    tok_to_string(current)
+                );
+                process::exit(1);
+            }
+        }
+        self.advance();
+        self.expect(&Tokens::CLOSEPAREN);
+        self.expect(&Tokens::SEMICOLON);
     }
 
     fn parse_fn_decl(&mut self) {

@@ -83,6 +83,23 @@ impl Lexer {
                 self.index += char_len;
                 Tokens::CLOSEPAREN
             }
+            '"' => {
+                self.index += char_len;
+                let mut identifier = String::new();
+                let mut id_iter = self.src[self.index..].chars();
+
+                while let Some(c) = id_iter.next() {
+                    self.index += c.len_utf8();
+                    if c == '"' {
+                        return Tokens::STRING(identifier);
+                    } else {
+                        identifier.push(c);
+                    }
+                }
+
+                eprintln!("ERROR on line {}: Unterminated string literal", self.line);
+                process::exit(1);
+            }
             _ if char.is_alphabetic() => {
                 let mut current_pos = self.index;
                 let mut id_iter = self.src[current_pos..].chars();
